@@ -1,0 +1,40 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  password  String
+  account   Account? @relation(fields: [accountId], references: [id])
+  accountId String?  @unique
+
+  @@map("users")
+}
+
+model Account {
+  id                   String         @id @default(uuid())
+  balance              Float
+  user                 User?
+  debitedTransactions  Transactions[] @relation("debited")
+  creditedTransactions Transactions[] @relation("credited")
+
+  @@map("accounts")
+}
+
+model Transactions {
+  value             Float
+  createdAt         DateTime @default(now())
+  debitedAccount    Account  @relation("debited", fields: [debitedAccountId], references: [id])
+  debitedAccountId  String   @unique
+  creditedAccount   Account  @relation("credited", fields: [creditedAccountId], references: [id])
+  creditedAccountId String   @unique
+
+  @@id([debitedAccountId, creditedAccountId])
+  @@map("transactions")
+}
